@@ -2,12 +2,20 @@ import * as React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { Alert } from "react-native";
 import Index from '../index';
+import { useRoute } from '@react-navigation/native';
 
 jest.spyOn(Alert, 'alert');
 
 describe('Index (Login Screen)', () => {
 });
 
+//mock para router.push
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+    useRouter: () => ({
+        push: mockPush,
+    })
+}))
 
 
 describe('Index (Login screen)', () => {
@@ -143,11 +151,11 @@ describe('Password Validation', () => {
         });
     });
     it('rejects invalid passwords without uppercase', async () => {
-        const { getByPlaceholderText, getAllByText } = render(<Index />);
+        const { getByPlaceholderText, getByText } = render(<Index />);
 
         const emailInput = getByPlaceholderText('ejemplo@correo.com');
         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-        const loginButton = getAllByText('Iniciar Sesión')[0];
+        const loginButton = getByText('Iniciar Sesión');
 
         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
         fireEvent.changeText(passwordInput, 'aabbcc*?*?1');
@@ -155,7 +163,6 @@ describe('Password Validation', () => {
 
         await waitFor(() => {
             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• una letra mayúscula');
-
         });
     });
     it('rejects invalid passwords without lowercase', async () => {
@@ -238,5 +245,16 @@ describe('Password Validation', () => {
 
         });
     });
-});
+    it('navigates to register screen on register button press', async () => {
+        const { getByText } = render(<Index />);
+        const registerButton = getByText('Registro');
 
+        fireEvent.press(registerButton);
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith({
+                pathname: '/register',
+            });
+        });
+    });
+});

@@ -1,6 +1,8 @@
 import { TextInput, Text, Button, Alert } from "react-native";
 import { styled } from 'styled-components/native';
 import { useState } from 'react';
+import { useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 // Componentes styled fuera del componente funcional para mejor rendimiento
 const MainContainer = styled.View`
@@ -101,8 +103,15 @@ function validarPasswrd(password : string) {
 
 
 export default function Index() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const onRegister = () => {
+    router.push({
+      pathname: "/register",
+    });
+  }
 
   function validarEmail() {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -211,6 +220,14 @@ export default function Index() {
         <Button
           title="Iniciar Sesión"
           onPress={handleSubmit}
+          color="lightblack"
+        />
+      </BtnView>
+
+      <BtnView>
+        <Button
+          title="Registro"
+          onPress={onRegister}
           color="lightblack"
         />
       </BtnView>
