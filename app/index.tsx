@@ -1,7 +1,6 @@
 import { TextInput, Text, Button, Alert } from "react-native";
 import { styled } from 'styled-components/native';
 import { useState } from 'react';
-import { useRoute } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 
 // Componentes styled fuera del componente funcional para mejor rendimiento
@@ -226,7 +225,7 @@ export default function Index() {
 
       <BtnView>
         <Button
-          title="Registro"
+          title="Registrarse"
           onPress={onRegister}
           color="lightblack"
         />
