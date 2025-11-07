@@ -247,7 +247,7 @@ describe('Password Validation', () => {
     });
     it('navigates to register screen on register button press', async () => {
         const { getByText } = render(<Index />);
-        const registerButton = getByText('Registro');
+        const registerButton = getByText('Registrarse');
 
         fireEvent.press(registerButton);
 

@@ -81,11 +81,11 @@ function validarPasswrd(password: string) {
   }
 
   // Requisito 5: Almenos un numero 0-9
-  const regexNumber = /(?=.*[0-9])/;
-  if (!regexNumber.test(password)) {
-    errores.push("un numero (0-9)");
-    isValid = false;
-  }
+  // const regexNumber = /(?=.*[0-9])/;
+  // if (!regexNumber.test(password)) {
+  //   errores.push("un numero (0-9)");
+  //   isValid = false;
+  // }
 
   return {
     isValid,
@@ -100,6 +100,7 @@ export default function Index() {
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
 
   const onRegister = () => {
     router.push({
@@ -114,18 +115,18 @@ export default function Index() {
 
   const handleSubmit = () => {
     // 1. Validar campos vacíos
-    if (!email && !password) {
-      Alert.alert('Error', 'Por favor, llena ambos campos');
+    if (!email || !password || !repeatPassword || !userName) {
+      Alert.alert('Error', 'Por favor, llena todos los campos');
       return;
     }
-    if (!password) {
-      Alert.alert('Error', 'Por favor, agrega una contraseña');
-      return;
-    }
-    if (!email) {
-      Alert.alert('Error', 'Por favor, agrega un email');
-      return;
-    }
+    // if (!password) {
+    //   Alert.alert('Error', 'Por favor, agrega una contraseña');
+    //   return;
+    // }
+    // if (!email) {
+    //   Alert.alert('Error', 'Por favor, agrega un email');
+    //   return;
+    // }
 
 
     // 2. Validar formato de email
@@ -148,9 +149,15 @@ export default function Index() {
       return; // Detiene la ejecución si la contraseña es inválida
     }
 
+    if (password != repeatPassword) {
+      Alert.alert('Contraseña', 'Las contraseña no coincide');
+      return;
+    }
+
     // 4. Si todo está bien, guardar datos y mostrar éxito
     const userData = {
       email: email,
+      user: userName,
       password: password,
       timestamp: new Date().toISOString()
     };
@@ -219,9 +226,9 @@ export default function Index() {
       </LabelView>
       <PasswView>
         <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Ex4mpl3pa55"
+          value={repeatPassword}
+          onChangeText={setRepeatPassword}
+          placeholder="repite: Ex4mpl3pa55"
           secureTextEntry={true} // oculta la contraseña
           autoCapitalize="none"
         />
@@ -230,7 +237,7 @@ export default function Index() {
       <BtnView>
         <Button
           title="Registrarse"
-          onPress={onRegister}
+          onPress={handleSubmit}
           color="lightblack"
         />
       </BtnView>
