@@ -81,11 +81,11 @@ function validarPasswrd(password: string) {
   }
 
   // Requisito 5: Almenos un numero 0-9
-  // const regexNumber = /(?=.*[0-9])/;
-  // if (!regexNumber.test(password)) {
-  //   errores.push("un numero (0-9)");
-  //   isValid = false;
-  // }
+  const regexNumber = /(?=.*[0-9])/;
+  if (!regexNumber.test(password)) {
+    errores.push("un numero (0-9)");
+    isValid = false;
+  }
 
   return {
     isValid,
@@ -104,7 +104,7 @@ export default function Index() {
 
   const onRegister = () => {
     router.push({
-      pathname: "/",
+      pathname: "/home",
     });
   }
 
@@ -172,8 +172,9 @@ export default function Index() {
           text: 'OK',
           onPress: () => {
             // Si quieres limpiar después del éxito, descomenta estas líneas:
-            // setEmail('');
-            // setPassword('');
+            setEmail('');
+            setPassword('');
+            onRegister();
           }
         }
       ]
