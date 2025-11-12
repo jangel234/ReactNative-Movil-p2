@@ -1,260 +1,400 @@
 import * as React from 'react';
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native'; // <-- Asegúrate de tener esta importación
 import { Alert } from "react-native";
 import Index from '../register';
-import { useRoute } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
+// Mock para Alert
 jest.spyOn(Alert, 'alert');
 
-describe('Index (Login Screen)', () => {
-});
+// Mock para expo-router
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  })
+}));
 
-//mock para router.push
-// const mockPush = jest.fn();
-// jest.mock('expo-router', () => ({
-//     useRouter: () => ({
-//         push: mockPush,
-//     })
-// }))
+describe('Index (Register Screen)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
+  it('renders all form fields correctly', () => {
+    render(<Index />);
+    
+    expect(screen.getByPlaceholderText('ejemplo@correo.com')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Usuario234')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Ex4mpl3pa55')).toBeTruthy();
+    expect(screen.getByPlaceholderText('repite: Ex4mpl3pa55')).toBeTruthy();
+    expect(screen.getByText('Registrarse')).toBeTruthy();
+  });
 
-describe('Index (Login screen)', () => {
-    it('renders correctly', () => {
-        render(<Index />);
-        expect(screen.getByPlaceholderText('ejemplo@correo.com')).toBeTruthy();
-        expect(screen.getByPlaceholderText('Usuario234')).toBeTruthy();
-        expect(screen.getByPlaceholderText('Ex4mpl3pa55')).toBeTruthy();
-        expect(screen.getByPlaceholderText('repite: Ex4mpl3pa55')).toBeTruthy(); 
-        expect(screen.getByText('Registrarse')).toBeTruthy();
-    })
-    it('shows alerts when fields are empty', async () => {
-        const { getByPlaceholderText, getAllByText } = render(<Index />);
+  it('shows alert when any field is empty', async () => {
+    render(<Index />);
 
-        const emailInput = getByPlaceholderText('ejemplo@correo.com');
-        const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-        const loginButton = getAllByText('Registrarse')[0];
+    const registerButton = screen.getByText('Registrarse');
+    fireEvent.press(registerButton);
 
-        fireEvent.changeText(emailInput, '');
-        fireEvent.changeText(passwordInput, '');
-        fireEvent.press(loginButton);
-
-        await waitFor(() => {
-            expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, llena todos los campos');
-        });
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, llena todos los campos');
     });
-    // it('shows alerts when only email is empty', async () => {
-    //     const { getByPlaceholderText, getAllByText } = render(<Index />);
+  });
 
-    //     const emailInput = getByPlaceholderText('ejemplo@correo.com');
-    //     const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-    //     const loginButton = getAllByText('Registrarse')[0];
+  it('validates email format correctly', async () => {
+    render(<Index />);
 
-    //     fireEvent.changeText(emailInput, '');
-    //     fireEvent.changeText(passwordInput, 'AaBbCc*?*?');
-    //     fireEvent.press(loginButton);
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
 
-    //     await waitFor(() => {
-    //         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, agrega un email');
+    // Fill form with invalid email
+    fireEvent.changeText(emailInput, 'invalid-email');
+    fireEvent.changeText(userNameInput, 'testuser');
+    fireEvent.changeText(passwordInput, 'ValidPass1!');
+    fireEvent.changeText(repeatPasswordInput, 'ValidPass1!');
+    fireEvent.press(registerButton);
 
-    //     });
-    // });
-    // it('shows alerts when only password is empty', async () => {
-    //     const { getByPlaceholderText, getAllByText } = render(<Index />);
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, ingresa un correo electrónico válido');
+    });
+  });
 
-    //     const emailInput = getByPlaceholderText('ejemplo@correo.com');
-    //     const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-    //     const loginButton = getAllByText('Registrarse')[0];
+  it('validates password strength requirements', async () => {
+    render(<Index />);
 
-    //     fireEvent.changeText(emailInput, 'jaguilar57@ucol.mx');
-    //     fireEvent.changeText(passwordInput, '');
-    //     fireEvent.press(loginButton);
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
 
-    //     await waitFor(() => {
-    //         expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, agrega una contraseña');
-    //     });
-    // });
-    // it('has correct keyboard type for email field', async () => {
-    //     const { getByPlaceholderText } = render(<Index />);
-    //     const emailInput = getByPlaceholderText('ejemplo@correo.com')
-    //     expect(emailInput.props.keyboardType).toBe('email-address');
-    // });
-    // it('has secure text entry for password field', () => {
-    //     const { getByPlaceholderText } = render(<Index />);
-    //     const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-    //     expect(passwordInput.props.secureTextEntry).toBe(true);
+    // Fill form with weak password
+    fireEvent.changeText(emailInput, 'test@example.com');
+    fireEvent.changeText(userNameInput, 'testuser');
+    fireEvent.changeText(passwordInput, 'weak');
+    fireEvent.changeText(repeatPasswordInput, 'weak');
+    fireEvent.press(registerButton);
 
-    // });
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error en Contraseña', 
+        expect.stringContaining('La contraseña debe contener:')
+      );
+    });
+  });
+
+  it('shows error when passwords do not match', async () => {
+    render(<Index />);
+
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
+
+    // Fill form with mismatched passwords
+    fireEvent.changeText(emailInput, 'test@example.com');
+    fireEvent.changeText(userNameInput, 'testuser');
+    fireEvent.changeText(passwordInput, 'ValidPass1!');
+    fireEvent.changeText(repeatPasswordInput, 'DifferentPass1!');
+    fireEvent.press(registerButton);
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith('Contraseña', 'Las contraseña no coincide');
+    });
+  });
+
+  it('successfully registers with valid data', async () => {
+    render(<Index />);
+
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
+
+    // Fill form with valid data
+    fireEvent.changeText(emailInput, 'test@example.com');
+    fireEvent.changeText(userNameInput, 'testuser123');
+    fireEvent.changeText(passwordInput, 'ValidPass1!');
+    fireEvent.changeText(repeatPasswordInput, 'ValidPass1!');
+    fireEvent.press(registerButton);
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        '¡Éxito!',
+        'Inicio de sesión exitoso.\nCorreo: test@example.com',
+        [
+          {
+            text: 'OK',
+            onPress: expect.any(Function)
+          }
+        ]
+      );
+    });
+  });
+
+  it('has correct input properties', () => {
+    render(<Index />);
+    
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+
+    // Email input properties
+    expect(emailInput.props.keyboardType).toBe('email-address');
+    expect(emailInput.props.autoCapitalize).toBe('none');
+
+    // Password input properties
+    expect(passwordInput.props.secureTextEntry).toBe(true);
+    expect(passwordInput.props.autoCapitalize).toBe('none');
+
+    // Repeat password input properties
+    expect(repeatPasswordInput.props.secureTextEntry).toBe(true);
+    expect(repeatPasswordInput.props.autoCapitalize).toBe('none');
+
+    // Username input properties
+    expect(userNameInput.props.autoCapitalize).toBe('none');
+  });
+
+  describe('Password Validation Edge Cases', () => {
+    it('rejects password without lowercase', async () => {
+      render(<Index />);
+
+      const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+      const userNameInput = screen.getByPlaceholderText('Usuario234');
+      const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+      const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+      const registerButton = screen.getByText('Registrarse');
+
+      fireEvent.changeText(emailInput, 'test@example.com');
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'VALIDPASS1!');
+      fireEvent.changeText(repeatPasswordInput, 'VALIDPASS1!');
+      fireEvent.press(registerButton);
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error en Contraseña',
+          expect.stringContaining('una letra minúscula')
+        );
+      });
+    });
+
+    it('rejects password without uppercase', async () => {
+      render(<Index />);
+
+      const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+      const userNameInput = screen.getByPlaceholderText('Usuario234');
+      const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+      const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+      const registerButton = screen.getByText('Registrarse');
+
+      fireEvent.changeText(emailInput, 'test@example.com');
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'validpass1!');
+      fireEvent.changeText(repeatPasswordInput, 'validpass1!');
+      fireEvent.press(registerButton);
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error en Contraseña',
+          expect.stringContaining('una letra mayúscula')
+        );
+      });
+    });
+
+    it('rejects password without special character', async () => {
+      render(<Index />);
+
+      const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+      const userNameInput = screen.getByPlaceholderText('Usuario234');
+      const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+      const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+      const registerButton = screen.getByText('Registrarse');
+
+      fireEvent.changeText(emailInput, 'test@example.com');
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'ValidPass123');
+      fireEvent.changeText(repeatPasswordInput, 'ValidPass123');
+      fireEvent.press(registerButton);
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error en Contraseña',
+          expect.stringContaining('carácter especial')
+        );
+      });
+    });
+
+    it('rejects password shorter than 8 characters', async () => {
+      render(<Index />);
+
+      const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+      const userNameInput = screen.getByPlaceholderText('Usuario234');
+      const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+      const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+      const registerButton = screen.getByText('Registrarse');
+
+      fireEvent.changeText(emailInput, 'test@example.com');
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'Val1!');
+      fireEvent.changeText(repeatPasswordInput, 'Val1!');
+      fireEvent.press(registerButton);
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error en Contraseña',
+          expect.stringContaining('longitud de al menos 8 caracteres')
+        );
+      });
+    });
+  });
+
+  describe('Form State Management', () => {
+    it('updates email state correctly', () => {
+      render(<Index />);
+      
+      const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+      fireEvent.changeText(emailInput, 'new@example.com');
+      
+      expect(emailInput.props.value).toBe('new@example.com');
+    });
+
+    it('updates username state correctly', () => {
+      render(<Index />);
+      
+      const userNameInput = screen.getByPlaceholderText('Usuario234');
+      fireEvent.changeText(userNameInput, 'newuser');
+      
+      expect(userNameInput.props.value).toBe('newuser');
+    });
+
+    it('updates password state correctly', () => {
+      render(<Index />);
+      
+      const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+      fireEvent.changeText(passwordInput, 'newpassword');
+      
+      expect(passwordInput.props.value).toBe('newpassword');
+    });
+
+    it('updates repeat password state correctly', () => {
+      render(<Index />);
+      
+      const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+      fireEvent.changeText(repeatPasswordInput, 'repeatedpassword');
+      
+      expect(repeatPasswordInput.props.value).toBe('repeatedpassword');
+    });
+  });
 });
 
-// describe('Email Validation', () => {
-//     it('accepts valid email formats', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
+// Tests adicionales - AQUÍ ESTÁ LA CORRECCIÓN
+describe('Additional Register Tests', () => {
+  // Asegúrate de que estas funciones estén disponibles en este scope
+  it('handles multiple validation errors in password', async () => {
+    render(<Index />); // <-- Ahora render está definido
 
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
 
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'AaBbCc*?*?1');
-//         fireEvent.press(loginButton);
+    // Password without uppercase, lowercase, and too short
+    fireEvent.changeText(emailInput, 'test@example.com');
+    fireEvent.changeText(userNameInput, 'testuser');
+    fireEvent.changeText(passwordInput, '123!');
+    fireEvent.changeText(repeatPasswordInput, '123!');
+    fireEvent.press(registerButton);
 
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('¡Éxito!', 'Inicio de sesión exitoso.\nCorreo: jaguilar57@gmail.com',
-//                 [
-//                     {
-//                         text: 'OK',
-//                         onPress: expect.any(Function)
-//                     }
-//                 ]
-//             );
-//         });
-//     });
-//     it('rejects invalid email formats', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
+    await waitFor(() => {
+      const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+      const errorMessage = alertCall[1];
+      
+      expect(errorMessage).toContain('una letra minúscula');
+      expect(errorMessage).toContain('una letra mayúscula');
+      expect(errorMessage).toContain('longitud de al menos 8 caracteres');
+    });
+  });
 
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
+  it('accepts various valid email formats', async () => {
+    render(<Index />); // <-- Ahora render está definido
 
-//         fireEvent.changeText(emailInput, 'invalidemail');
-//         fireEvent.changeText(passwordInput, 'AaBbCc*?*?1');
-//         fireEvent.press(loginButton);
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
 
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error', 'Por favor, ingresa un correo electrónico válido');
+    const validEmails = [
+      'user.name@domain.com',
+      'user+tag@domain.co.uk',
+      'user@sub.domain.com'
+    ];
 
-//         });
-//     });
-// });
+    for (const validEmail of validEmails) {
+      jest.clearAllMocks();
+      
+      fireEvent.changeText(emailInput, validEmail);
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'ValidPass1!');
+      fireEvent.changeText(repeatPasswordInput, 'ValidPass1!');
+      fireEvent.press(registerButton);
 
-// describe('Password Validation', () => {
-//     it('accepts valid passwords', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
+    await waitFor(() => {
+      // Verifica que se llamó a Alert.alert con los argumentos correctos
+      expect(Alert.alert).toHaveBeenCalledWith(
+        '¡Éxito!',
+        `Inicio de sesión exitoso.\nCorreo: ${validEmail}`,
+        [
+          {
+            text: 'OK',
+            onPress: expect.any(Function)
+          }
+        ]
+      );
+    });
+  }
+});
 
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
+  it('rejects various invalid email formats', async () => {
+    render(<Index />); // <-- Ahora render está definido
 
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'AaBbCc*?*?1');
-//         fireEvent.press(loginButton);
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const userNameInput = screen.getByPlaceholderText('Usuario234');
+    const passwordInput = screen.getByPlaceholderText('Ex4mpl3pa55');
+    const repeatPasswordInput = screen.getByPlaceholderText('repite: Ex4mpl3pa55');
+    const registerButton = screen.getByText('Registrarse');
 
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('¡Éxito!', 'Inicio de sesión exitoso.\nCorreo: jaguilar57@gmail.com',
-//                 [
-//                     {
-//                         text: 'OK',
-//                         onPress: expect.any(Function)
-//                     }
-//                 ]
-//             );
-//         });
-//     });
-//     it('rejects invalid passwords without uppercase', async () => {
-//         const { getByPlaceholderText, getByText } = render(<Index />);
+    const invalidEmails = [
+      'invalid',
+      'invalid@',
+      '@domain.com',
+      'invalid@domain',
+      'invalid@.com'
+    ];
 
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getByText('Registrarse');
+    for (const invalidEmail of invalidEmails) {
+      jest.clearAllMocks();
+      
+      fireEvent.changeText(emailInput, invalidEmail);
+      fireEvent.changeText(userNameInput, 'testuser');
+      fireEvent.changeText(passwordInput, 'ValidPass1!');
+      fireEvent.changeText(repeatPasswordInput, 'ValidPass1!');
+      fireEvent.press(registerButton);
 
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'aabbcc*?*?1');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• una letra mayúscula');
-//         });
-//     });
-//     it('rejects invalid passwords without lowercase', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
-
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
-
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'AABBCC*?*?1');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• una letra minúscula');
-
-//         });
-//     });
-//     it('rejects invalid passwords without special characters', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
-
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
-
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'aabbccABC1');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• un carácter especial (@, (, !, ), %, *, ?, &)');
-
-//         });
-//     });
-//     it('rejects invalid passwords shorter than 8 characters', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
-
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
-
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'AbCaB1?');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• una longitud de al menos 8 caracteres');
-
-//         });
-//     });
-//     it('rejects invalid passwords without number', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
-
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
-
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, 'AaBbCc*?*?');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• un numero (0-9)');
-
-//         });
-//     });
-//     it('rejects invalid passwords with only numbers and special characters', async () => {
-//         const { getByPlaceholderText, getAllByText } = render(<Index />);
-
-//         const emailInput = getByPlaceholderText('ejemplo@correo.com');
-//         const passwordInput = getByPlaceholderText('Ex4mpl3pa55');
-//         const loginButton = getAllByText('Registrarse')[0];
-
-//         fireEvent.changeText(emailInput, 'jaguilar57@gmail.com');
-//         fireEvent.changeText(passwordInput, '234*?*?1');
-//         fireEvent.press(loginButton);
-
-//         await waitFor(() => {
-//             expect(Alert.alert).toHaveBeenCalledWith('Error en Contraseña', 'La contraseña debe contener:\n• una letra minúscula\n• una letra mayúscula');
-
-//         });
-//     });
-//     it('navigates to register screen on register button press', async () => {
-//         const { getByText } = render(<Index />);
-//         const registerButton = getByText('Registro');
-
-//         fireEvent.press(registerButton);
-
-//         await waitFor(() => {
-//             expect(mockPush).toHaveBeenCalledWith({
-//                 pathname: '/register',
-//             });
-//         });
-//     });
-// });
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Error', 
+          'Por favor, ingresa un correo electrónico válido'
+        );
+      });
+    }
+  });
+});
