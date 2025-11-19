@@ -1,6 +1,6 @@
 import { ArtistResource } from "@/types/artists"
 
-const API_KEY = "a0b7538025b8a38c70ce8dd816798f6b"
+// const API_KEY = "a0b7538025b8a38c70ce8dd816798f6b"
 const URL = `https://ws.audioscrobbler.com/2.0/?method=geo.gettopartists&country=spain&api_key=a0b7538025b8a38c70ce8dd816798f6b&format=json`
 
 function getMusicData() {
