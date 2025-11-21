@@ -1,23 +1,28 @@
-import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import ArtistBox from "@/components/ArtistBox";
+import { useLocalSearchParams } from "expo-router";
+import React from "react";
 import { View } from "react-native";
+import styled from "styled-components/native";
+import { Artist } from "@/types/artists";
 
 
-export default function ModalScreen() {
-  return (
-    <View />
-  );
+const MainContainer = styled(View)`
+    flex:1;
+    align-items: center;
+`;
+
+export default function ArtistDetailView() {
+    const params = useLocalSearchParams();
+
+    const artist: Artist = {
+        id: Number(params.id),
+        name: String(params.name),
+        image: String(params.image)
+    };
+
+    return (
+        <MainContainer>
+            <ArtistBox artist={artist} />
+        </MainContainer>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

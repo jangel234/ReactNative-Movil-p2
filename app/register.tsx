@@ -172,8 +172,8 @@ export default function Index() {
           text: 'OK',
           onPress: () => {
             // Si quieres limpiar después del éxito, descomenta estas líneas:
-            setEmail('');
-            setPassword('');
+            // setEmail('');
+            // setPassword('');
             onRegister();
           }
         }
